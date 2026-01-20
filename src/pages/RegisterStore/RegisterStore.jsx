@@ -14,9 +14,12 @@ import { PatternFormat } from "react-number-format";
 const RegisterStore = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loadingCep, setLoadingCep] = useState(false);
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState(null);
 
-  // --- ESTADOS PARA PREVIEW DE IMAGEM (Novos) ---
-  // Separamos os dados reais (no formData) da visualização (aqui)
+  // --- ESTADOS PARA PREVIEW DE IMAGEM ---
   const [logoPreview, setLogoPreview] = useState(null);
   const [fotoLojaPreview, setFotoLojaPreview] = useState(null);
 
@@ -89,6 +92,7 @@ const RegisterStore = () => {
             ...prev,
             rua: data.logradouro,
             complemento: data.complemento || prev.complemento,
+            bairro: data.bairro || prev.bairro,
           }));
       } catch (err) {
         console.error(err);
@@ -103,8 +107,6 @@ const RegisterStore = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // --- NOVO HANDLER DE ARQUIVOS COM PREVIEW ---
-  // Agora aceita o nome do campo e a função para setar o preview correspondente
   const handleFileChange = (e, fieldName, setPreviewFn) => {
     const file = e.target.files[0];
     if (file && file.type.startsWith("image/")) {
@@ -117,8 +119,64 @@ const RegisterStore = () => {
     }
   };
 
-  // Limpeza de memória (Boa prática de engenharia):
-  // Revoga as URLs de preview quando o componente desmonta para evitar memory leaks
+  // --- FUNÇÃO DE ENVIO PARA O PHP ---
+  const handleSubmit = async () => {
+    if (!isStepValid()) {
+      setSubmitError("Por favor, preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    setLoadingSubmit(true);
+    setSubmitError(null);
+
+    try {
+      const formDataToSend = new FormData();
+      
+      // Adiciona todos os campos do formulário
+      Object.keys(formData).forEach(key => {
+        if (formData[key] !== null && formData[key] !== undefined) {
+          if (key === 'logo' || key === 'fotoLoja') {
+            // Arquivos são adicionados diretamente
+            if (formData[key]) {
+              formDataToSend.append(key, formData[key]);
+            }
+          } else {
+            // Textos são adicionados como strings
+            formDataToSend.append(key, formData[key]);
+          }
+        }
+      });
+
+      // Envia para o backend PHP
+      const response = await fetch('http://newandrews.com.br/checkout-asaas/index.php', {
+        method: 'POST',
+        body: formDataToSend,
+        // NOTA: Não defina Content-Type header para FormData
+        // O browser fará isso automaticamente com o boundary correto
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.paymentUrl) {
+        setSubmitSuccess(true);
+        setPaymentUrl(result.paymentUrl);
+        
+        // Redireciona automaticamente após 2 segundos
+        setTimeout(() => {
+          window.location.href = result.paymentUrl;
+        }, 2000);
+      } else {
+        setSubmitError(result.errors ? result.errors.join(', ') : 'Erro desconhecido no servidor');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      setSubmitError('Erro ao conectar com o servidor. Tente novamente.');
+    } finally {
+      setLoadingSubmit(false);
+    }
+  };
+
+  // Limpeza de memória
   useEffect(() => {
     return () => {
       if (logoPreview) URL.revokeObjectURL(logoPreview);
@@ -170,12 +228,30 @@ const RegisterStore = () => {
             </h3>
           </div>
 
+          {/* MENSAGENS DE STATUS */}
+          {submitError && (
+            <div className={styles.errorMessage}>
+              ❌ {submitError}
+            </div>
+          )}
+          
+          {submitSuccess && paymentUrl && (
+            <div className={styles.successMessage}>
+              ✅ Cadastro processado com sucesso! Redirecionando para pagamento...
+              <div className={styles.paymentLink}>
+                <a href={paymentUrl} target="_blank" rel="noopener noreferrer">
+                  Clique aqui se o redirecionamento não funcionar
+                </a>
+              </div>
+            </div>
+          )}
+
           {/* AREA DE SCROLL (MIOLO) */}
           <div className={styles.scrollWindow}>
             {currentStep === 1 && (
               <>
                 <div className={styles.inputGroup}>
-                  <label>Nome da Empresa</label>
+                  <label>Nome da Empresa *</label>
                   <input
                     name="nomeLoja"
                     className={styles.input}
@@ -185,9 +261,7 @@ const RegisterStore = () => {
                   />
                 </div>
                 <div className={styles.inputGroup}>
-                  <label>Logo da Empresa</label>
-
-                  {/* --- UPLOAD DE LOGO COM PREVIEW --- */}
+                  <label>Logo da Empresa *</label>
                   <input
                     type="file"
                     id="logo-upload"
@@ -220,7 +294,6 @@ const RegisterStore = () => {
                       </div>
                     )}
                   </label>
-                  {/* ---------------------------------- */}
                 </div>
               </>
             )}
@@ -230,7 +303,7 @@ const RegisterStore = () => {
                 <div className={styles.flexRow}>
                   <div className={`${styles.inputGroup} ${styles.colHalf}`}>
                     <label>
-                      CEP{" "}
+                      CEP *{" "}
                       {loadingCep && (
                         <Loader2 size={12} className="animate-spin" />
                       )}
@@ -244,22 +317,24 @@ const RegisterStore = () => {
                     />
                   </div>
                   <div className={`${styles.inputGroup} ${styles.colHalf}`}>
-                    <label>Número</label>
+                    <label>Número *</label>
                     <input
                       name="numero"
                       className={styles.input}
                       value={formData.numero}
                       onChange={handleChange}
+                      placeholder="Nº"
                     />
                   </div>
                 </div>
                 <div className={styles.inputGroup}>
-                  <label>Rua</label>
+                  <label>Rua *</label>
                   <input
                     name="rua"
                     className={styles.input}
                     value={formData.rua}
                     onChange={handleChange}
+                    placeholder="Nome da rua"
                   />
                 </div>
                 <div className={styles.inputGroup}>
@@ -269,7 +344,17 @@ const RegisterStore = () => {
                     className={styles.input}
                     value={formData.complemento}
                     onChange={handleChange}
-                    placeholder="Opcional"
+                    placeholder="Apto, Sala, etc. (opcional)"
+                  />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Bairro</label>
+                  <input
+                    name="bairro"
+                    className={styles.input}
+                    value={formData.bairro}
+                    onChange={handleChange}
+                    placeholder="Nome do bairro"
                   />
                 </div>
               </>
@@ -278,16 +363,17 @@ const RegisterStore = () => {
             {currentStep === 3 && (
               <>
                 <div className={styles.inputGroup}>
-                  <label>Nome do Proprietário</label>
+                  <label>Nome do Proprietário *</label>
                   <input
                     name="proprietario"
                     className={styles.input}
                     value={formData.proprietario}
                     onChange={handleChange}
+                    placeholder="Nome completo"
                   />
                 </div>
                 <div className={styles.inputGroup}>
-                  <label>CPF ou CNPJ</label>
+                  <label>CPF ou CNPJ *</label>
                   <input
                     name="documento"
                     className={styles.input}
@@ -298,23 +384,25 @@ const RegisterStore = () => {
                 </div>
                 <div className={styles.flexRow}>
                   <div className={`${styles.inputGroup} ${styles.colHalf}`}>
-                    <label>E-mail</label>
+                    <label>E-mail *</label>
                     <input
                       name="email"
                       type="email"
                       className={styles.input}
                       value={formData.email}
                       onChange={handleChange}
+                      placeholder="seu@email.com"
                     />
                   </div>
                   <div className={`${styles.inputGroup} ${styles.colHalf}`}>
-                    <label>Telefone</label>
+                    <label>Telefone *</label>
                     <PatternFormat
                       format="(##) #####-####"
                       name="telefone"
                       className={styles.input}
                       value={formData.telefone}
                       onChange={handleChange}
+                      placeholder="(11) 99999-9999"
                     />
                   </div>
                 </div>
@@ -324,28 +412,28 @@ const RegisterStore = () => {
             {currentStep === 4 && (
               <>
                 <div className={styles.inputGroup}>
-                  <label>Slogan</label>
+                  <label>Slogan *</label>
                   <input
                     name="descCurta"
                     className={styles.input}
                     value={formData.descCurta}
                     onChange={handleChange}
+                    placeholder="Frase curta sobre sua loja"
                   />
                 </div>
                 <div className={styles.inputGroup}>
-                  <label>Sobre a Loja</label>
+                  <label>Sobre a Loja *</label>
                   <textarea
                     name="descLonga"
                     className={styles.input}
                     rows={4}
                     value={formData.descLonga}
                     onChange={handleChange}
+                    placeholder="Descreva sua loja com detalhes..."
                   ></textarea>
                 </div>
                 <div className={styles.inputGroup}>
-                  <label>Foto da Loja</label>
-
-                  {/* --- UPLOAD DE FOTO DA LOJA COM PREVIEW --- */}
+                  <label>Foto da Loja *</label>
                   <input
                     type="file"
                     id="foto-upload"
@@ -378,7 +466,6 @@ const RegisterStore = () => {
                       </div>
                     )}
                   </label>
-                  {/* ---------------------------------------- */}
                 </div>
               </>
             )}
@@ -392,6 +479,7 @@ const RegisterStore = () => {
               <button
                 className={styles.btnPrev}
                 onClick={() => setCurrentStep((s) => s - 1)}
+                disabled={loadingSubmit}
               >
                 <ArrowLeft size={18} /> Voltar
               </button>
@@ -401,19 +489,29 @@ const RegisterStore = () => {
 
             <button
               className={styles.btnNext}
-              disabled={!isStepValid()}
+              disabled={!isStepValid() || loadingSubmit}
               onClick={() =>
                 currentStep === 4
-                  ? console.log("Enviar para API:", formData)
+                  ? handleSubmit()
                   : setCurrentStep((s) => s + 1)
               }
               style={{
-                opacity: isStepValid() ? 1 : 0.5,
-                cursor: isStepValid() ? "pointer" : "not-allowed",
+                opacity: isStepValid() && !loadingSubmit ? 1 : 0.5,
+                cursor: isStepValid() && !loadingSubmit ? "pointer" : "not-allowed",
               }}
             >
-              {currentStep === 4 ? "Concluir" : "Próximo"}
-              {currentStep < 4 && <ArrowRight size={18} />}
+              {loadingSubmit ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" /> Processando...
+                </>
+              ) : currentStep === 4 ? (
+                "Concluir e Pagar"
+              ) : (
+                <>
+                  Próximo
+                  <ArrowRight size={18} />
+                </>
+              )}
             </button>
           </div>
         </main>
