@@ -1,7 +1,8 @@
+/* RegisterStore.module.css */
+
 /* CONTAINER GERAL - Centraliza o card na tela */
 .container {
   position: fixed;
-  /* Isso mata o scroll do body */
   top: 0;
   left: 0;
   width: 100%;
@@ -12,7 +13,6 @@
   align-items: center;
   justify-content: center;
   z-index: 0;
-  /* Garante que fique atrás de tudo */
 }
 
 /* O CARTÃO */
@@ -21,7 +21,6 @@
   width: 95%;
   max-width: 1100px;
   height: 90vh;
-  /* Ocupa 90% da altura da tela */
   border-radius: 24px;
   display: flex;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
@@ -38,7 +37,6 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  /* Impede a sidebar de esmagar */
 }
 
 .brand {
@@ -91,7 +89,7 @@
   border-color: #00897b;
 }
 
-/* ÁREA DIREITA - Flex Column para gerenciar Header, Body (scroll) e Footer */
+/* ÁREA DIREITA */
 .content {
   flex: 1;
   display: flex;
@@ -99,7 +97,6 @@
   height: 100%;
   position: relative;
   min-width: 0;
-  /* Evita estouro do flex em conteúdos largos */
 }
 
 .headerArea {
@@ -113,23 +110,18 @@
   margin: 0;
 }
 
-/* ÁREA DE SCROLL (O MIOLO) */
+/* ÁREA DE SCROLL */
 .scrollWindow {
   flex: 1;
-  /* Ocupa todo o espaço disponível no meio */
   overflow-y: auto;
-  /* Habilita o scroll apenas aqui */
   padding: 10px 60px;
-  /* Padding interno para os inputs não colarem na borda */
 }
 
-/* SISTEMA DE COLUNAS FLEXBOX (O QUE SUBSTITUI O GRID) */
+/* SISTEMA DE COLUNAS FLEXBOX */
 .flexRow {
   display: flex;
   justify-content: space-between;
-  /* Separa os itens */
   gap: 24px;
-  /* Espaço visual */
   margin-bottom: 25px;
   width: 100%;
 }
@@ -137,20 +129,15 @@
 .inputGroup {
   margin-bottom: 25px;
   width: 100%;
-  /* Padrão full width */
 }
 
-/* A MÁGICA DO 50% - Substitui o Grid */
 .colHalf {
-  /* Calcula: 50% da tela MENOS metade do gap (12px). 
-     Isso garante que 2 itens caibam perfeitamente sem quebrar linha. */
   width: calc(50% - 12px);
   flex-shrink: 0;
-  /* Garante que o flex não esmague o input */
 }
 
 /* ESTILO DOS INPUTS */
-.inputGroup label {
+.inputGroup label, .colHalf label {
   display: block;
   font-size: 11px;
   font-weight: 700;
@@ -167,49 +154,69 @@
   font-size: 16px;
   outline: none;
   box-sizing: border-box;
-  /* Importante para o padding não somar na largura */
+  background-color: #fff;
+  transition: border-color 0.2s;
+}
+
+/* Estilo para campos ReadOnly (Rua, Bairro) */
+.input:read-only {
+  background-color: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
 }
 
 .input:focus {
   border-color: #00897b;
   border-width: 2px;
-  padding: 13px 17px;
-  /* Compensa a borda para não pular */
+  padding: 13px 17px; /* Compensa a borda */
 }
 
-.fileUpload {
+/* UPLOAD */
+.hiddenInput {
+  display: none;
+}
+
+.fileUploadLabel {
   border: 2px dashed #e2e8f0;
-  padding: 25px;
   border-radius: 12px;
+  min-height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  color: #64748b;
+  cursor: pointer;
   position: relative;
-  cursor: pointer;
+  overflow: hidden;
+  transition: 0.3s;
+  background-color: #fcfdfe;
+  width: 100%;
 }
 
-.fileUpload:hover {
-  background-color: #f9f9f9;
+.fileUploadLabel:hover {
   border-color: #00897b;
+  background-color: #f4fcfb;
 }
 
-.fileUpload input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
+.placeholderContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #64748b;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  padding: 20px;
 }
 
-/* RODAPÉ (BOTÕES) - Fixo no fundo */
+/* RODAPÉ */
 .actions {
   padding: 20px 60px 40px 60px;
   border-top: 1px solid #f1f5f9;
   display: flex;
   justify-content: space-between;
   background: white;
-  /* Garante que o scroll não apareça por trás */
   z-index: 10;
   flex-shrink: 0;
 }
@@ -239,302 +246,82 @@
   cursor: pointer;
 }
 
+/* MENSAGENS */
+.errorMessage {
+  color: #721c24;
+  padding: 15px;
+  margin: 0 60px 20px 60px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.successMessage {
+  color: #155724;
+  padding: 15px;
+  margin: 0 60px 20px 60px;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
 /* MOBILE */
 @media (max-width: 768px) {
-
-  /* 1. TRAVA GERAL DA TELA */
   .container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
     height: 100dvh;
-    /* Altura real do mobile */
     background: white;
     z-index: 9999;
     overflow: hidden;
-    /* Impede rolagem na página principal */
   }
-
   .card {
     width: 100%;
     height: 100%;
     max-width: 100%;
-    /* Garante que não estoure a largura */
     border-radius: 0;
     box-shadow: none;
-    display: flex;
     flex-direction: column;
-    /* Pilha vertical */
-    overflow: hidden;
   }
-
-  /* 2. CABEÇALHO (SIDEBAR) REORGANIZADO */
-  /* Mudamos para COLUNA para caber o título */
   .sidebar {
     width: 100%;
     height: auto;
     padding: 15px 0px;
-    /* Padding seguro lateral */
     border-right: none;
     border-bottom: 1px solid #f1f5f9;
-    display: flex;
     flex-direction: column;
-    /* Um embaixo do outro */
     align-items: center;
-    /* Centraliza tudo */
-    justify-content: center;
     gap: 15px;
-    /* Espaço entre título e bolinhas */
-    background: white;
-    flex-shrink: 0;
   }
-
-  /* Trazemos o título de volta! */
   .sidebarTitle {
-    display: block !important;
-    font-size: 24px;
-    color: #1e293b;
+    display: block;
+    font-size: 20px;
     margin: 0;
     text-align: center;
-    width: 100%;
   }
-
-  /* 3. ETAPAS (Centralizadas) */
   .stepsContainer {
-    display: flex;
     flex-direction: row;
     width: 100%;
     justify-content: center;
-    /* Centraliza as bolinhas na tela */
     gap: 15px;
-    padding: 0;
-    overflow: visible;
-    /* Remove scroll lateral das bolinhas para ficarem fixas */
   }
-
-  .stepItem {
-    font-size: 0;
-  }
-
-  /* Esconde o texto "Loja/Endereço" para limpar o visual */
-  .stepItem span {
-    display: none;
-  }
-
-  /* Reforço para esconder texto */
-  .stepNumber {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-  }
-
-  /* Bolinhas em tamanho bom */
-
-  /* 4. CONTEÚDO E SCROLL */
+  .stepItem span { display: none; }
   .content {
     width: 100%;
-    flex: 1;
-    /* Ocupa o espaço que sobra */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    /* Trava vazamento */
     padding: 0;
   }
-
-  .headerArea {
-    display: none;
-    /* Removemos o título repetido de dentro do conteúdo */
-  }
-
-  /* Onde os inputs ficam */
+  .headerArea { display: none; }
   .scrollWindow {
     padding: 20px 24px;
-    /* Margem segura lateral */
     width: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    box-sizing: border-box;
-    /* IMPORTANTE: Padding não soma na largura */
   }
-
-  /* 5. RODAPÉ (BOTÕES) CENTRALIZADOS */
   .actions {
     width: 100%;
     padding: 20px 24px;
-    /* Distância das bordas */
-    background: white;
-    border-top: 1px solid #f1f5f9;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    /* Mantém "Voltar" na esq e "Próximo" na dir */
-    box-sizing: border-box;
-    /* Evita que o padding estoure a tela */
-    flex-shrink: 0;
   }
-
-  /* Se quiser que os botões fiquem colados no centro (opcional) */
-  /* .actions { justify-content: center; gap: 20px; } */
-
-  .btnNext,
-  .btnPrev {
-    font-size: 14px;
-    white-space: nowrap;
-    /* Texto não quebra linha */
-  }
-
-  /* Ajuste para inputs lado a lado no mobile virarem coluna */
   .flexRow {
     flex-direction: column;
     gap: 0;
   }
-
-  .colHalf {
-    width: 100%;
-  }
-}
-
-/* Esconde o input file nativo feio, mas o deixa funcional via label */
-.hiddenInput {
-  display: none;
-}
-
-/* O container pontilhado agora age como um label clicável */
-.fileUploadLabel {
-  border: 2px dashed #e2e8f0;
-  border-radius: 12px;
-  min-height: 200px;
-  /* Sua alteração mantida */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: 0.3s;
-  background-color: #fcfdfe;
-  width: 100%;
-  /* Garante largura total */
-}
-
-.fileUploadLabel:hover {
-  border-color: #00897b;
-  background-color: #f4fcfb;
-}
-
-.placeholderContent {
-  display: flex;
-  flex-direction: column;
-  /* Ícone em cima do texto */
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  /* Mais espaço entre ícone e texto */
-  color: #64748b;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  padding: 20px;
-}
-
-/* Garante que o ícone não fique minúsculo */
-.placeholderContent svg {
-  width: 48px;
-  height: 48px;
-  color: #cbd5e1;
-}
-
-/* A imagem de preview em si */
-.previewImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* Cobre toda a área sem distorcer */
-  position: absolute;
-  inset: 0;
-}
-
-/* Um overlay escuro que aparece ao passar o mouse sobre o preview */
-.changeOverlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s;
-  color: white;
-  font-weight: 600;
-  font-size: 12px;
-}
-
-.fileUploadLabel:hover .changeOverlay {
-  opacity: 1;
-}
-
-/* Adicione estas classes ao seu arquivo RegisterStore.module.css */
-
-.errorMessage {
-  background-color: #fee;
-  border: 1px solid #f99;
-  color: #c00;
-  padding: 12px 20px;
-  border-radius: 8px;
-  margin: 15px 60px;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.successMessage {
-  background-color: #e8f8f0;
-  border: 1px solid #2ecc71;
-  color: #27ae60;
-  padding: 15px 20px;
-  border-radius: 8px;
-  margin: 15px 60px;
-  font-size: 14px;
-  text-align: center;
-}
-
-.paymentLink {
-  margin-top: 10px;
-}
-
-.paymentLink a {
-  color: #00897b;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.paymentLink a:hover {
-  text-decoration: underline;
-}
-
-/* Estilo para campos obrigatórios */
-.inputGroup label::after {
-  content: " *";
-  color: #ff4444;
-  font-weight: bold;
-}
-
-/* Para campos opcionais, use uma classe específica */
-.inputGroup .optional::after {
-  content: "";
-}
-
-/* Ajuste para mobile */
-@media (max-width: 768px) {
-
-  .errorMessage,
-  .successMessage {
-    margin: 15px 24px;
-    font-size: 13px;
-  }
+  .colHalf { width: 100%; }
 }
