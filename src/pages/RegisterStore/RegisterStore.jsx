@@ -148,7 +148,7 @@ const RegisterStore = () => {
       });
 
       // Envia para o backend PHP
-      const response = await fetch('http://newandrews.com.br/checkout-asaas/index.php', {
+      const response = await fetch('https://newandrews.com.br/checkout-asaas/index.php', {
         method: 'POST',
         body: formDataToSend,
         // NOTA: Não defina Content-Type header para FormData
