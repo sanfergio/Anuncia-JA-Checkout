@@ -1,80 +1,69 @@
-/* RegisterStore.module.css */
+/* RegisterStore.module.css - Refeito do Zero para Responsividade Total */
 
-/* VARIÁVEIS GERAIS */
+/* === 1. VARIÁVEIS DE COR (Identidade Visual do Sócio) === */
 :root {
-  --primary: #10b981;
-  /* Emerald 500 */
-  --primary-dark: #059669;
-  /* Emerald 600 */
-  --primary-light: #d1fae5;
-  /* Emerald 100 */
-  --bg-app: #f3f4f6;
-  /* Gray 100 */
-  --bg-card: #ffffff;
-  --text-main: #1f2937;
-  /* Gray 800 */
-  --text-muted: #6b7280;
-  /* Gray 500 */
-  --border-color: #e5e7eb;
-  /* Gray 200 */
-  --error: #ef4444;
-  --radius: 12px;
+  --primary: #10b981;       /* Verde Emerald */
+  --primary-dark: #059669;  /* Verde Escuro */
+  --primary-light: #d1fae5; /* Verde Claro */
+  --bg-app: #f3f4f6;        /* Fundo Cinza */
+  --bg-card: #ffffff;       /* Fundo Branco */
+  --text-main: #1f2937;     /* Texto Escuro */
+  --text-muted: #6b7280;    /* Texto Cinza */
+  --border-color: #e5e7eb;  /* Bordas */
+  --error: #ef4444;         /* Vermelho Erro */
+  --radius: 16px;           /* Arredondamento */
 }
 
-/* LAYOUT PRINCIPAL */
+/* === 2. RESET BÁSICO === */
+* {
+  box-sizing: border-box; /* Crucial para não estourar larguras */
+}
+
+/* === 3. CONTAINER PRINCIPAL (FUNDO CINZA) === */
 .container {
-  min-height: 100vh;
-  background-color: var(--bg-app);
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--bg-app);
   padding: 20px;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
+/* === 4. O CARTÃO (MODAL) === */
 .card {
   display: flex;
   width: 100%;
-  max-width: 1000px;
+  max-width: 1100px;
+  height: 85vh; /* Altura fixa no desktop (85% da tela) */
   min-height: 600px;
   background: var(--bg-card);
-  border-radius: 20px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-  overflow: hidden;
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  overflow: hidden; /* Garante que nada vaze as bordas arredondadas */
+  position: relative;
 }
 
-/* SIDEBAR (ESQUERDA) */
+/* === 5. SIDEBAR (ESQUERDA - DESKTOP) === */
 .sidebar {
-  width: 35%;
-  background: linear-gradient(145deg, var(--primary) 0%, var(--primary-dark) 100%);
+  width: 340px; /* Largura fixa */
+  background: linear-gradient(160deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: white;
   padding: 40px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Efeito decorativo no background da sidebar */
-.sidebar::before {
-  content: "";
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 200px;
-  height: 200px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
+  flex-shrink: 0; /* Impede a sidebar de encolher */
 }
 
 .brand {
+  font-size: 1.5rem;
+  font-weight: 800;
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 1.5rem;
-  font-weight: 700;
-  z-index: 10;
+  letter-spacing: -0.5px;
 }
 
 .stepsContainer {
@@ -89,12 +78,12 @@
   align-items: center;
   gap: 16px;
   opacity: 0.6;
-  transition: all 0.3s ease;
+  transition: 0.3s;
 }
 
 .stepActive {
   opacity: 1;
-  transform: translateX(10px);
+  font-weight: 600;
 }
 
 .stepIcon {
@@ -105,7 +94,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
 }
 
 .stepActive .stepIcon {
@@ -116,309 +104,294 @@
 .stepInfo {
   display: flex;
   flex-direction: column;
+  line-height: 1.3;
 }
 
-.stepTitle {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
+.stepTitle { font-size: 0.9rem; }
+.stepSubtitle { font-size: 0.75rem; opacity: 0.9; font-weight: normal; }
 
-.stepSubtitle {
-  font-size: 0.8rem;
-  opacity: 0.9;
-}
-
-/* CONTEÚDO (DIREITA) */
+/* === 6. ÁREA DE CONTEÚDO (DIREITA) === */
 .content {
-  flex: 1;
+  flex: 1; /* Ocupa o resto do espaço */
   display: flex;
   flex-direction: column;
-  padding: 40px 50px;
-  overflow-y: auto;
+  height: 100%; /* Respeita a altura do pai (.card) */
+  overflow: hidden; /* Impede scroll duplo */
   position: relative;
 }
 
-.headerMobile {
+/* O Header Mobile fica escondido no Desktop */
+.headerMobile, .mobileProgress {
   display: none;
-  /* Escondido no desktop */
 }
 
+/* Cabeçalho do Formulário */
 .formHeader {
-  margin-bottom: 30px;
+  padding: 50px 50px 30px 50px;
+  flex-shrink: 0; /* Não deixa encolher ao rolar */
 }
 
 .formTitle {
   font-size: 1.8rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--text-main);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  line-height: 1.1;
 }
 
 .formSubtitle {
   color: var(--text-muted);
 }
 
-/* FORM GRID */
+/* Formulário Rolável (Scrollable Area) */
+/* Isso substitui a sua div que quebrava o layout */
+/* FORM GRID (ATUALIZADO) */
 .formGrid {
+  padding: 0 50px 40px 50px;
+  overflow-y: auto;
+  flex: 1;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
+  /* O SEGREDO: minmax(0, 1fr) impede que o conteúdo estoure a largura */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-content: start;
 }
 
-/* Quando houver espaço suficiente no desktop, dividir em duas colunas */
-@media (min-width: 768px) {
-  .formGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+/* Personalização da barra de rolagem */
+.formGrid::-webkit-scrollbar { width: 6px; }
+.formGrid::-webkit-scrollbar-track { background: transparent; }
+.formGrid::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 20px; }
 
-  .fullWidth {
-    grid-column: span 2;
-  }
-}
+/* Classes utilitárias do Grid */
+.fullWidth { grid-column: span 2; }
 
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
+/* Estilo dos Inputs */
+.formGroup { display: flex; flex-direction: column; gap: 8px; }
 
 .label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-main);
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
 }
 
-.input,
-.textarea {
+.input, .textarea {
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 16px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius);
+  border-radius: 12px;
   font-size: 1rem;
   color: var(--text-main);
-  transition: all 0.2s;
-  background-color: #f9fafb;
+  background: #f9fafb;
+  transition: 0.2s;
 }
 
-.textarea {
-  resize: vertical;
-  min-height: 100px;
-  font-family: inherit;
-}
-
-.input:focus,
-.textarea:focus {
+.input:focus, .textarea:focus {
   outline: none;
-  background-color: white;
+  background: white;
   border-color: var(--primary);
   box-shadow: 0 0 0 4px var(--primary-light);
 }
 
-.inputError {
-  border-color: var(--error);
-  background-color: #fef2f2;
-}
+.textarea { resize: vertical; min-height: 100px; font-family: inherit; }
+.inputError { border-color: var(--error); background: #fef2f2; }
 
-.inputError:focus {
-  box-shadow: 0 0 0 4px #fee2e2;
-}
-
-.errorMessage {
-  font-size: 0.8rem;
-  color: var(--error);
-  margin-top: 2px;
-}
-
-/* UPLOAD AREA */
+/* Galeria de Fotos / Upload */
+/* UPLOAD AREA (ATUALIZADO) */
 .uploadContainer {
   position: relative;
   width: 100%;
-  height: 180px;
+  max-width: 100%; /* Trava de segurança extra */
+  /* MUDANÇA: Altura flexível (min 140px) em vez de fixa (180px) */
+  min-height: 140px;
+  height: auto;
   border: 2px dashed var(--border-color);
   border-radius: var(--radius);
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   cursor: pointer;
   transition: all 0.2s;
   background-color: #f9fafb;
-  overflow: hidden;
+  overflow: hidden; /* Garante que a imagem não vaze as bordas */
 }
 
 .uploadContainer:hover {
   border-color: var(--primary);
-  background-color: var(--primary-light);
+  background: var(--primary-light);
 }
 
-.uploadPreview {
+/* Novo Grid da Galeria */
+.galleryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 12px;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  padding: 15px;
 }
 
-.previewOverlay {
+.galleryItem {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.galleryItem img { width: 100%; height: 100%; object-fit: cover; }
+
+.removeBtn {
   position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: 4px; right: 4px;
+  width: 24px; height: 24px;
+  background: rgba(0,0,0,0.6);
   color: white;
-  opacity: 0;
-  transition: opacity 0.2s;
+  border: none; border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
 }
 
-.uploadContainer:hover .previewOverlay {
-  opacity: 1;
+.addMoreBtn {
+  display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 1;
+  border: 2px dashed var(--primary);
+  color: var(--primary);
+  background: white;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
 }
 
-/* BOTÕES DE NAVEGAÇÃO */
+/* RODAPÉ (ACTIONS) */
 .actions {
+  padding: 20px 50px;
+  border-top: 1px solid var(--border-color);
+  background: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border-color);
-}
-
-.btnBack,
-.btnNext {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  border-radius: 50px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
+  flex-shrink: 0; /* Não deixa sumir */
 }
 
 .btnBack {
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid transparent;
-}
-
-.btnBack:hover {
-  background-color: #f3f4f6;
-  color: var(--text-main);
+  background: transparent; color: var(--text-muted); border: none; font-weight: 600;
+  display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 20px;
 }
 
 .btnNext {
-  background: var(--primary);
-  color: white;
-  border: none;
-  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
+  background: var(--primary); color: white; border: none; font-weight: 600;
+  padding: 14px 32px; border-radius: 50px;
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  transition: 0.2s;
 }
 
-.btnNext:hover {
-  background: var(--primary-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 8px -1px rgba(16, 185, 129, 0.5);
-}
+.btnNext:hover { background: var(--primary-dark); transform: translateY(-2px); }
+.btnNext:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
-.btnNext:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* LOADING E STATUS */
-.globalError {
-  background-color: #fee2e2;
-  color: #991b1b;
-  padding: 12px;
-  border-radius: var(--radius);
-  margin-bottom: 20px;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.spinner {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* === RESPONSIVIDADE MOBILE === */
+/* === 6. MOBILE TRANSFORMER (A Mágica Acontece Aqui) === */
 @media (max-width: 900px) {
-  .card {
-    flex-direction: column;
-    height: auto;
-    max-height: none;
-    border-radius: 0;
-    /* Full screen no mobile */
-  }
 
+  /* 1. Container vira tela cheia travada */
   .container {
     padding: 0;
     align-items: flex-start;
-  }
-
-  .sidebar {
-    display: none;
-    /* Remove sidebar lateral */
-  }
-
-  .headerMobile {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    background: var(--primary);
-    color: white;
-  }
-
-  .mobileStepText {
-    font-size: 0.9rem;
-    font-weight: 600;
-  }
-
-  .mobileProgress {
-    height: 4px;
-    background: #e5e7eb;
-    margin-top: 0;
-  }
-
-  .mobileProgressBar {
-    height: 100%;
-    background: var(--primary);
-    transition: width 0.3s;
-  }
-
-  .content {
-    padding: 24px;
-    overflow: visible;
-  }
-
-  .formTitle {
-    font-size: 1.5rem;
-  }
-
-  .actions {
-    position: sticky;
-    bottom: 0;
+    height: 100dvh; /* Altura real do mobile */
+    overflow: hidden;
     background: white;
-    margin-top: 20px;
-    padding: 16px 0;
+  }
+
+  /* 2. Card expande 100% */
+  .card {
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* 3. SIDEBAR NO TOPO (Transformação Flex) */
+  .sidebar {
+    display: flex; /* Garante que apareça */
+    width: 100%;
+    height: 70px; /* Altura fixa de cabeçalho */
+    padding: 0 20px;
+    flex-direction: row; /* Itens lado a lado */
+    align-items: center;
+    justify-content: center; /* Centraliza verticalmente o conteúdo */
+  }
+
+  .sidebar::before { display: none; } /* Remove bola decorativa */
+  
+  /* ESCONDE O RODAPÉ DA SIDEBAR (Texto de Copyright) */
+  .sidebar > div:last-child { display: none; }
+
+  /* 4. ALINHAMENTO MARCA <-> ÍCONES */
+  /* Pegamos a div que agrupa Brand e Steps e forçamos ela a ser horizontal */
+  .sidebar > div:first-child {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .brand { font-size: 1.2rem; }
+
+  /* Ajuste dos Passos (Steps) para ficarem em linha */
+  .stepsContainer {
+    flex-direction: row;
+    margin-top: 0;
+    gap: 12px;
+  }
+
+  .stepItem { gap: 0; opacity: 0.5; margin: 0; }
+  .stepActive { opacity: 1; transform: none; }
+
+  /* Esconde os textos dos passos, deixa só o ícone */
+  .stepInfo { display: none; }
+  
+  .stepIcon {
+    width: 28px; height: 28px; font-size: 0.8rem;
+    background: rgba(255,255,255,0.25);
+  }
+  .stepActive .stepIcon { background: white; color: var(--primary); }
+
+  /* Esconde os cabeçalhos mobile antigos que davam problema */
+  .headerMobile, .mobileProgress { display: none !important; }
+
+  /* 5. CONTEÚDO E SCROLL */
+  .content {
+    width: 100%;
+    flex: 1; /* Ocupa todo o espaço restante */
+    padding: 0;
+  }
+
+  .formHeader { padding: 20px 24px 10px 24px; }
+  .formTitle { font-size: 1.5rem; }
+
+  /* Grid vira coluna única e ganha scroll */
+  .formGrid {
+    /* MUDANÇA: minmax(0, 1fr) aqui também para o mobile */
+    grid-template-columns: minmax(0, 1fr);
+    padding: 10px 24px 20px 24px;
+    overflow-y: auto;
+  }
+
+  .fullWidth { grid-column: span 1; }
+
+  /* 6. AÇÕES FIXAS NO RODAPÉ */
+  .actions {
+    padding: 16px 24px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
     z-index: 50;
   }
 
-  .btnBack,
-  .btnNext {
-    padding: 10px 20px;
-    font-size: 0.9rem;
-  }
+  .btnNext { width: auto; padding: 12px 24px; font-size: 0.95rem; }
+  .btnBack { padding: 10px; font-size: 0.9rem; }
 }
