@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styles from "./RegisterStore.module.css";
 import {
   Check,
@@ -7,88 +7,42 @@ import {
   ArrowRight,
   ArrowLeft,
   Loader2,
+  MapPin,
+  Store,
+  User,
+  ShoppingBag,
+  AlertCircle
 } from "lucide-react";
 import { PatternFormat } from "react-number-format";
 
-// --- CONFIGURAÇÃO DA API ---
+// --- CONFIGURAÇÕES ---
+// Aponte para onde você salvou o arquivo index.php
 const API_ENDPOINT = "https://www.newandrews.com.br/checkout-asaas/index.php";
 
-// --- FUNÇÕES AUXILIARES DE VALIDAÇÃO ---
+const IMGBB_API_KEY = "570dba9241a1e1c9300130c89fa05036";
+const IMGBB_UPLOAD_URL = "https://api.imgbb.com/1/upload";
 
-// Valida CPF ou CNPJ (Matemática rigorosa)
+// --- UTILS ---
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).toLowerCase());
+
 const isValidCpfCnpj = (val) => {
   if (!val) return false;
   const clean = val.replace(/\D/g, "");
-
-  // CPF (11 dígitos)
-  if (clean.length === 11) {
-    if (/^(\d)\1+$/.test(clean)) return false;
-    let soma = 0, resto;
-    for (let i = 1; i <= 9; i++) soma += parseInt(clean.substring(i - 1, i)) * (11 - i);
-    resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
-    if (resto !== parseInt(clean.substring(9, 10))) return false;
-    soma = 0;
-    for (let i = 1; i <= 10; i++) soma += parseInt(clean.substring(i - 1, i)) * (12 - i);
-    resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
-    if (resto !== parseInt(clean.substring(10, 11))) return false;
-    return true;
-  }
-
-  // CNPJ (14 dígitos)
-  if (clean.length === 14) {
-    if (/^(\d)\1+$/.test(clean)) return false;
-    let tamanho = clean.length - 2;
-    let numeros = clean.substring(0, tamanho);
-    let digitos = clean.substring(tamanho);
-    let soma = 0, pos = tamanho - 7;
-    for (let i = tamanho; i >= 1; i--) {
-      soma += parseInt(numeros.charAt(tamanho - i)) * pos--;
-      if (pos < 2) pos = 9;
-    }
-    let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
-    if (resultado !== parseInt(digitos.charAt(0))) return false;
-
-    tamanho = tamanho + 1;
-    numeros = clean.substring(0, tamanho);
-    soma = 0;
-    pos = tamanho - 7;
-    for (let i = tamanho; i >= 1; i--) {
-      soma += parseInt(numeros.charAt(tamanho - i)) * pos--;
-      if (pos < 2) pos = 9;
-    }
-    resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
-    if (resultado !== parseInt(digitos.charAt(1))) return false;
-    return true;
-  }
-  return false;
+  return clean.length === 11 || clean.length === 14; // Validação simplificada para UX, API valida real
 };
 
-// Validação de E-mail (Regex Padrão)
-const isValidEmail = (email) => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).toLowerCase());
-};
-
-// Validação de Telefone (10 ou 11 dígitos numéricos)
-const isValidPhone = (phone) => {
-  if (!phone) return false;
-  const clean = phone.replace(/\D/g, "");
-  return clean.length >= 10 && clean.length <= 11;
-};
-
+// --- COMPONENTE PRINCIPAL ---
 const RegisterStore = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [loadingCep, setLoadingCep] = useState(false);
-  const [loadingSubmit, setLoadingSubmit] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [paymentUrl, setPaymentUrl] = useState(null);
+  const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const contentRef = useRef(null);
 
-  // Previews de imagem
-  const [logoPreview, setLogoPreview] = useState(null);
-  const [fotoLojaPreview, setFotoLojaPreview] = useState(null);
+  // Estados dos Arquivos e Previews
+  const [files, setFiles] = useState({ logo: null, fotoLoja: null });
+  const [previews, setPreviews] = useState({ logo: null, fotoLoja: null });
 
+  // Estado do Formulário
   const [formData, setFormData] = useState({
     nomeLoja: "",
     cep: "",
@@ -99,513 +53,497 @@ const RegisterStore = () => {
     email: "",
     telefone: "",
     proprietario: "",
-    documento: "", // CPF ou CNPJ
+    documento: "",
     descCurta: "",
     descLonga: "",
-    logo: null,
-    fotoLoja: null,
   });
 
-  // --- BUSCA CEP ---
-  const handleCepChange = async (e) => {
-    const valor = e.target.value;
-    const cepLimpo = valor.replace(/\D/g, "");
+  // Estados de erro por campo (para bordas vermelhas)
+  const [fieldErrors, setFieldErrors] = useState({});
 
-    setFormData((prev) => ({ ...prev, cep: valor }));
+  // Scroll para o topo ao mudar de passo
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }, [step]);
 
-    // Reseta campos se apagar o CEP
-    if (cepLimpo.length < 8) {
-       setFormData(prev => ({...prev, rua: "", bairro: ""}));
-    }
-
-    if (cepLimpo.length === 8) {
-      setLoadingCep(true);
-      setSubmitError(null);
-      try {
-        const res = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
-        const data = await res.json();
-        
-        if (data.erro) {
-          setSubmitError("CEP não encontrado. Verifique os números.");
-          setFormData((prev) => ({ ...prev, rua: "", bairro: "" }));
-        } else {
-          setFormData((prev) => ({
-            ...prev,
-            rua: data.logradouro,
-            complemento: data.complemento || prev.complemento,
-            bairro: data.bairro || prev.bairro,
-            // Cidade e UF podem ser salvos aqui se o seu backend aceitar,
-            // mas mantive apenas o que seu código original enviava.
-          }));
-          setSubmitError(null); // Limpa erro se sucesso
-        }
-      } catch (err) {
-        console.error(err);
-        setSubmitError("Erro ao buscar CEP. Verifique sua conexão.");
-      } finally {
-        setLoadingCep(false);
-      }
-    }
-  };
-
+  // Handler Genérico de Input
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Limpa erro do campo ao digitar
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: null }));
+    }
   };
 
-  const handleFileChange = (e, fieldName, setPreviewFn) => {
+  // Handler de Arquivos
+  const handleFile = (e, key) => {
     const file = e.target.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setFormData((prev) => ({ ...prev, [fieldName]: file }));
-      const previewUrl = URL.createObjectURL(file);
-      setPreviewFn(previewUrl);
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMsg("A imagem deve ter no máximo 5MB.");
+        return;
+      }
+      setFiles((prev) => ({ ...prev, [key]: file }));
+      setPreviews((prev) => ({ ...prev, [key]: URL.createObjectURL(file) }));
+      setFieldErrors((prev) => ({ ...prev, [key]: null }));
+      setErrorMsg(null);
     }
   };
 
-  // --- VALIDAÇÃO DE NAVEGAÇÃO ENTRE ETAPAS ---
-  const handleNextStep = () => {
-    setSubmitError(null);
+  // Handler CEP
+  const handleCep = async (e) => {
+    const valor = e.target.value;
+    setFormData(prev => ({ ...prev, cep: valor }));
 
-    // Validação ETAPA 1
-    if (currentStep === 1) {
-      if (formData.nomeLoja.trim().length < 3) {
-        setSubmitError("O nome da loja deve ter pelo menos 3 caracteres.");
-        return;
-      }
-      if (!formData.logo) {
-        setSubmitError("Por favor, faça o upload da logo da loja.");
-        return;
+    const cepLimpo = valor.replace(/\D/g, "");
+    if (cepLimpo.length === 8) {
+      setIsLoading(true);
+      try {
+        const req = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+        const data = await req.json();
+        if (!data.erro) {
+          setFormData(prev => ({
+            ...prev,
+            rua: data.logradouro,
+            bairro: data.bairro,
+            complemento: data.complemento || prev.complemento
+          }));
+          setFieldErrors(prev => ({ ...prev, rua: null, bairro: null }));
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
       }
     }
-
-    // Validação ETAPA 2 (Endereço)
-    if (currentStep === 2) {
-      const cleanCep = formData.cep.replace(/\D/g, "");
-      if (cleanCep.length !== 8) {
-        setSubmitError("Digite um CEP válido.");
-        return;
-      }
-      if (!formData.rua) {
-        setSubmitError("Endereço não preenchido. Digite um CEP válido para buscar.");
-        return;
-      }
-      if (!formData.numero.trim()) {
-        setSubmitError("Por favor, informe o número do endereço.");
-        return;
-      }
-    }
-
-    // Validação ETAPA 3 (Contato/Documento)
-    if (currentStep === 3) {
-      if (formData.proprietario.trim().length < 3) {
-        setSubmitError("Informe o nome completo do proprietário.");
-        return;
-      }
-      
-      if (!isValidCpfCnpj(formData.documento)) {
-        setSubmitError("CPF ou CNPJ inválido. Verifique os dígitos.");
-        return;
-      }
-
-      if (!isValidEmail(formData.email)) {
-        setSubmitError("E-mail inválido. Ex: nome@empresa.com");
-        return;
-      }
-
-      if (!isValidPhone(formData.telefone)) {
-        setSubmitError("Telefone inválido. Digite DDD + Número (ex: 11999999999).");
-        return;
-      }
-    }
-
-    // Se tudo ok, avança
-    setCurrentStep((prev) => prev + 1);
   };
 
-  // --- SUBMIT FINAL ---
+  // Upload para ImgBB
+  const uploadImage = async (file) => {
+    const data = new FormData();
+    data.append("image", file);
+    data.append("key", IMGBB_API_KEY);
+
+    const res = await fetch(IMGBB_UPLOAD_URL, { method: "POST", body: data });
+    const json = await res.json();
+    if (!json.success) throw new Error("Falha no upload da imagem");
+    return json.data.url;
+  };
+
+  // Validação e Avanço
+  const validateStep = () => {
+    const errors = {};
+    let isValid = true;
+
+    if (step === 1) {
+      if (formData.nomeLoja.length < 3) errors.nomeLoja = true;
+      if (!files.logo) errors.logo = true;
+    }
+
+    if (step === 2) {
+      if (formData.cep.replace(/\D/g, "").length !== 8) errors.cep = true;
+      if (!formData.rua) errors.rua = true;
+      if (!formData.numero) errors.numero = true;
+    }
+
+    if (step === 3) {
+      if (formData.proprietario.length < 3) errors.proprietario = true;
+      if (!isValidEmail(formData.email)) errors.email = true;
+      if (formData.telefone.replace(/\D/g, "").length < 10) errors.telefone = true;
+      if (!isValidCpfCnpj(formData.documento)) errors.documento = true;
+    }
+
+    if (step === 4) {
+      if (formData.descCurta.length < 5) errors.descCurta = true;
+      if (formData.descLonga.length < 10) errors.descLonga = true;
+      if (!files.fotoLoja) errors.fotoLoja = true;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setErrorMsg("Preencha os campos obrigatórios marcados em vermelho.");
+      isValid = false;
+    } else {
+      setErrorMsg(null);
+    }
+
+    return isValid;
+  };
+
+  const handleNext = () => {
+    if (validateStep()) {
+      setStep((prev) => prev + 1);
+    }
+  };
+
+  // Submissão Final
   const handleSubmit = async () => {
-    setSubmitError(null);
-    
-    // Validação ETAPA 4
-    if (formData.descCurta.trim().length < 5) {
-      setSubmitError("O slogan deve ter pelo menos 5 caracteres.");
-      return;
-    }
-    if (formData.descLonga.trim().length < 10) {
-      setSubmitError("A descrição deve ser mais detalhada.");
-      return;
-    }
-    if (!formData.fotoLoja) {
-      setSubmitError("Adicione uma foto da sua vitrine/loja.");
-      return;
-    }
+    if (!validateStep()) return;
 
-    setLoadingSubmit(true);
+    setIsLoading(true);
+    setErrorMsg(null);
 
     try {
-      const dataToSend = new FormData();
-      const cleanCep = formData.cep.replace(/\D/g, "");
-      const cleanPhone = formData.telefone.replace(/\D/g, "");
-      const cleanDoc = formData.documento.replace(/\D/g, "");
+      // 1. Upload Imagens
+      const [logoUrl, fotoLojaUrl] = await Promise.all([
+        uploadImage(files.logo),
+        uploadImage(files.fotoLoja)
+      ]);
 
-      dataToSend.append("nomeLoja", formData.nomeLoja);
-      dataToSend.append("cep", cleanCep);
-      dataToSend.append("rua", formData.rua);
-      dataToSend.append("numero", formData.numero);
-      dataToSend.append("complemento", formData.complemento);
-      dataToSend.append("bairro", formData.bairro);
-      dataToSend.append("email", formData.email);
-      dataToSend.append("telefone", cleanPhone);
-      dataToSend.append("proprietario", formData.proprietario);
-      dataToSend.append("documento", cleanDoc);
-      dataToSend.append("descCurta", formData.descCurta);
-      dataToSend.append("descLonga", formData.descLonga);
-
-      if (formData.logo instanceof File) dataToSend.append("logo", formData.logo);
-      if (formData.fotoLoja instanceof File) dataToSend.append("fotoLoja", formData.fotoLoja);
+      // 2. Enviar para Backend PHP
+      const payload = {
+        ...formData,
+        cep: formData.cep.replace(/\D/g, ""),
+        telefone: formData.telefone.replace(/\D/g, ""),
+        documento: formData.documento.replace(/\D/g, ""),
+        logoUrl,
+        fotoLojaUrl,
+        descricaoCurta: formData.descCurta,
+        descricaoLonga: formData.descLonga
+      };
 
       const response = await fetch(API_ENDPOINT, {
         method: "POST",
-        body: dataToSend,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
       });
 
-      const textResult = await response.text();
-      let result;
-      try {
-        result = JSON.parse(textResult);
-      } catch (e) {
-        console.error("Resposta não-JSON:", textResult);
-        throw new Error("O servidor retornou uma resposta inválida.");
+      const result = await response.json();
+
+      if (result.success && result.paymentUrl) {
+        // Sucesso: Redirecionar
+        window.location.href = result.paymentUrl;
+      } else {
+        throw new Error(result.message || "Erro desconhecido no servidor");
       }
 
-      if (response.ok && (result.success || result.paymentUrl)) {
-        setSubmitSuccess(true);
-        const finalUrl = result.paymentUrl || result.url;
-        setPaymentUrl(finalUrl);
-        if (finalUrl) {
-          setTimeout(() => { window.location.href = finalUrl; }, 2500);
-        }
-      } else {
-        const msg = result.errors ? result.errors.join(", ") : result.message || "Erro ao processar cadastro.";
-        setSubmitError(msg);
-      }
-    } catch (error) {
-      setSubmitError(error.message || "Erro de conexão. Tente novamente.");
-    } finally {
-      setLoadingSubmit(false);
+    } catch (err) {
+      setErrorMsg(err.message || "Erro ao conectar com o servidor.");
+      setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    return () => {
-      if (logoPreview) URL.revokeObjectURL(logoPreview);
-      if (fotoLojaPreview) URL.revokeObjectURL(fotoLojaPreview);
-    };
-  }, [logoPreview, fotoLojaPreview]);
+  // Renderizadores Auxiliares
+  const Steps = [
+    { id: 1, icon: Store, title: "Identidade", sub: "Nome e Logo" },
+    { id: 2, icon: MapPin, title: "Localização", sub: "Endereço completo" },
+    { id: 3, icon: User, title: "Responsável", sub: "Dados de contato" },
+    { id: 4, icon: ShoppingBag, title: "Vitrine", sub: "Descrição e Foto" },
+  ];
 
   return (
     <div className={styles.container}>
+      {/* HEADER MOBILE (APENAS TELAS PEQUENAS) */}
+      <div className={styles.headerMobile}>
+        <div className={styles.brand}>
+          <Store size={24} /> <span>Anuncia Já</span>
+        </div>
+        <div className={styles.mobileStepText}>
+          Passo {step} de 4
+        </div>
+      </div>
+
+      {/* BARRA DE PROGRESSO MOBILE */}
+      <div className={styles.mobileProgress}>
+        <div
+          className={styles.mobileProgressBar}
+          style={{ width: `${(step / 4) * 100}%` }}
+        />
+      </div>
+
       <div className={styles.card}>
-        {/* SIDEBAR */}
+        {/* SIDEBAR DESKTOP */}
         <aside className={styles.sidebar}>
-          <div className={styles.brand}>Anuncia Já</div>
-          <h2 className={styles.sidebarTitle}>Criar conta</h2>
-          <div className={styles.stepsContainer}>
-            {[1, 2, 3, 4].map((num) => (
-              <div
-                key={num}
-                className={`${styles.stepItem} ${currentStep >= num ? styles.stepActive : ""}`}
-              >
-                <div className={`${styles.stepNumber} ${currentStep >= num ? styles.stepNumberActive : ""}`}>
-                  {currentStep > num ? <Check size={14} /> : num}
+          <div>
+            <div className={styles.brand}>
+              <Store size={28} />
+              <span>Anuncia Já</span>
+            </div>
+
+            <div className={styles.stepsContainer}>
+              {Steps.map((s) => (
+                <div key={s.id} className={`${styles.stepItem} ${step >= s.id ? styles.stepActive : ''}`}>
+                  <div className={styles.stepIcon}>
+                    {step > s.id ? <Check size={18} /> : <s.icon size={18} />}
+                  </div>
+                  <div className={styles.stepInfo}>
+                    <span className={styles.stepTitle}>{s.title}</span>
+                    <span className={styles.stepSubtitle}>{s.sub}</span>
+                  </div>
                 </div>
-                <span>
-                  {num === 1 ? "Loja" : num === 2 ? "Local" : num === 3 ? "Contato" : "Vitrine"}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          <div style={{ opacity: 0.8, fontSize: '0.8rem' }}>
+            © 2026 Anuncia Já<br />Pagamento Seguro via Asaas
           </div>
         </aside>
 
-        {/* CONTEÚDO */}
-        <main className={styles.content}>
-          <div className={styles.headerArea}>
-            <h3 className={styles.stepTitle}>
-              {currentStep === 1 && "Identidade da Loja"}
-              {currentStep === 2 && "Onde te encontram?"}
-              {currentStep === 3 && "Responsável e Contato"}
-              {currentStep === 4 && "Sua Vitrine"}
-            </h3>
+        {/* ÁREA DO FORMULÁRIO */}
+        <main className={styles.content} ref={contentRef}>
+          <div className={styles.formHeader}>
+            <h2 className={styles.formTitle}>
+              {step === 1 && "Vamos começar pela sua marca"}
+              {step === 2 && "Onde seus clientes te encontram?"}
+              {step === 3 && "Quem é o responsável?"}
+              {step === 4 && "Como é a sua loja?"}
+            </h2>
+            <p className={styles.formSubtitle}>
+              Preencha os dados abaixo para configurar sua loja.
+            </p>
           </div>
 
-          {submitError && (
-            <div className={styles.errorMessage}>⚠️ {submitError}</div>
-          )}
-
-          {submitSuccess && paymentUrl && (
-            <div className={styles.successMessage}>
-              ✅ Cadastro realizado! Redirecionando para pagamento...
+          {errorMsg && (
+            <div className={styles.globalError}>
+              <AlertCircle size={20} />
+              {errorMsg}
             </div>
           )}
 
-          <div className={styles.scrollWindow}>
-            {/* STEP 1 - LOJA */}
-            {currentStep === 1 && (
+          <div className={styles.formGrid}>
+
+            {/* PASSO 1 */}
+            {step === 1 && (
               <>
-                <div className={styles.inputGroup}>
-                  <label>Nome da Empresa *</label>
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label className={styles.label}>Nome da Loja</label>
                   <input
                     name="nomeLoja"
-                    className={styles.input}
+                    className={`${styles.input} ${fieldErrors.nomeLoja ? styles.inputError : ''}`}
+                    placeholder="Ex: Mercado Central"
                     value={formData.nomeLoja}
                     onChange={handleChange}
-                    placeholder="Ex: Mercado Central"
                   />
                 </div>
-                <div className={styles.inputGroup}>
-                  <label>Logo da Empresa *</label>
-                  <input
-                    type="file"
-                    id="logo-upload"
-                    className={styles.hiddenInput}
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, "logo", setLogoPreview)}
-                  />
-                  <label htmlFor="logo-upload" className={styles.fileUploadLabel}>
-                    {logoPreview ? (
-                      <div style={{ textAlign: "center" }}>
-                        <img
-                          src={logoPreview}
-                          alt="Logo Preview"
-                          style={{ maxHeight: "150px", borderRadius: "8px", marginBottom: "10px" }}
-                        />
-                        <div style={{ fontSize: "0.8rem", color: "#64748b" }}>Clique para trocar</div>
-                      </div>
-                    ) : (
-                      <div className={styles.placeholderContent}>
-                        <Upload size={32} />
-                        <div>Clique para adicionar sua logo</div>
-                      </div>
-                    )}
-                  </label>
+
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label className={styles.label}>Logo da Marca</label>
+                  <div className={styles.uploadContainer} style={{ borderColor: fieldErrors.logo ? 'var(--error)' : '' }}>
+                    <input
+                      type="file"
+                      id="file-logo"
+                      hidden
+                      accept="image/*"
+                      onChange={(e) => handleFile(e, 'logo')}
+                    />
+                    <label htmlFor="file-logo" style={{ width: '100%', height: '100%', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      {previews.logo ? (
+                        <>
+                          <img src={previews.logo} className={styles.uploadPreview} alt="Logo" />
+                          <div className={styles.previewOverlay}>
+                            <Camera size={24} /> <span style={{ marginLeft: 8 }}>Trocar</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={32} color="var(--primary)" />
+                          <span style={{ marginTop: 12, color: 'var(--text-muted)' }}>Clique para adicionar logo</span>
+                        </>
+                      )}
+                    </label>
+                  </div>
                 </div>
               </>
             )}
 
-            {/* STEP 2 - LOCAL (Com ViaCEP Obrigatório) */}
-            {currentStep === 2 && (
+            {/* PASSO 2 */}
+            {step === 2 && (
               <>
-                <div className={styles.flexRow}>
-                  <div className={styles.colHalf}>
-                    <label>
-                      CEP * {loadingCep && <Loader2 size={12} className="animate-spin" />}
-                    </label>
-                    <PatternFormat
-                      format="#####-###"
-                      name="cep"
-                      className={styles.input}
-                      value={formData.cep}
-                      onChange={handleCepChange}
-                      placeholder="00000-000"
-                    />
-                  </div>
-                  <div className={styles.colHalf}>
-                    <label>Número *</label>
-                    <input
-                      name="numero"
-                      className={styles.input}
-                      value={formData.numero}
-                      onChange={handleChange}
-                      placeholder="Nº"
-                    />
-                  </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>CEP</label>
+                  <PatternFormat
+                    format="#####-###"
+                    name="cep"
+                    className={`${styles.input} ${fieldErrors.cep ? styles.inputError : ''}`}
+                    placeholder="00000-000"
+                    value={formData.cep}
+                    onChange={handleCep}
+                  />
+                  {isLoading && <small style={{ color: 'var(--primary)' }}>Buscando endereço...</small>}
                 </div>
-                
-                <div className={styles.inputGroup}>
-                  <label>Rua (Preenchimento Automático) *</label>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Número</label>
                   <input
-                    name="rua"
-                    className={styles.input}
-                    value={formData.rua}
-                    readOnly // BLOQUEADO
-                    tabIndex={-1}
-                    placeholder="Preencha o CEP para buscar"
+                    name="numero"
+                    className={`${styles.input} ${fieldErrors.numero ? styles.inputError : ''}`}
+                    placeholder="123"
+                    value={formData.numero}
+                    onChange={handleChange}
                   />
                 </div>
 
-                <div className={styles.inputGroup}>
-                  <label>Bairro (Preenchimento Automático) *</label>
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label className={styles.label}>Rua</label>
+                  <input
+                    name="rua"
+                    className={`${styles.input} ${fieldErrors.rua ? styles.inputError : ''}`}
+                    placeholder="Endereço"
+                    value={formData.rua}
+                    readOnly
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Bairro</label>
                   <input
                     name="bairro"
                     className={styles.input}
                     value={formData.bairro}
-                    readOnly // BLOQUEADO
-                    tabIndex={-1}
-                    placeholder="Preencha o CEP para buscar"
+                    readOnly
                   />
                 </div>
 
-                <div className={styles.inputGroup}>
-                  <label>Complemento</label>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Complemento</label>
                   <input
                     name="complemento"
                     className={styles.input}
+                    placeholder="Apto, Sala..."
                     value={formData.complemento}
                     onChange={handleChange}
-                    placeholder="Ex: Sala 2"
                   />
                 </div>
               </>
             )}
 
-            {/* STEP 3 - CONTATO E DOCUMENTO */}
-            {currentStep === 3 && (
+            {/* PASSO 3 */}
+            {step === 3 && (
               <>
-                <div className={styles.inputGroup}>
-                  <label>Nome do Proprietário *</label>
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label className={styles.label}>Nome Completo</label>
                   <input
                     name="proprietario"
-                    className={styles.input}
+                    className={`${styles.input} ${fieldErrors.proprietario ? styles.inputError : ''}`}
+                    placeholder="Seu nome"
                     value={formData.proprietario}
                     onChange={handleChange}
-                    placeholder="Nome completo"
                   />
                 </div>
-                
-                <div className={styles.inputGroup}>
-                  <label>CPF ou CNPJ *</label>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>CPF ou CNPJ</label>
                   <PatternFormat
-                    // Lógica para alternar máscara baseada no tamanho atual
-                    format={formData.documento.replace(/\D/g, "").length > 11 ? "##.###.###/####-##" : "###.###.###-#####"}
+                    format={formData.documento.replace(/\D/g, "").length > 11 ? "##.###.###/####-##" : "###.###.###-###"}
                     name="documento"
-                    className={styles.input}
+                    className={`${styles.input} ${fieldErrors.documento ? styles.inputError : ''}`}
+                    placeholder="Documento"
                     value={formData.documento}
-                    onValueChange={(values) => {
-                      setFormData(prev => ({ ...prev, documento: values.value }))
-                    }}
-                    placeholder="Digite CPF ou CNPJ"
-                    mask="_"
+                    onValueChange={(vals) => setFormData(p => ({ ...p, documento: vals.value }))}
                   />
                 </div>
 
-                <div className={styles.inputGroup}>
-                  <label>E-mail *</label>
-                  <input
-                    type="email"
-                    name="email"
-                    className={styles.input}
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="email@exemplo.com"
-                  />
-                </div>
-
-                <div className={styles.inputGroup}>
-                  <label>Telefone / WhatsApp *</label>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Telefone / WhatsApp</label>
                   <PatternFormat
                     format="(##) #####-####"
                     name="telefone"
-                    className={styles.input}
+                    className={`${styles.input} ${fieldErrors.telefone ? styles.inputError : ''}`}
+                    placeholder="(00) 90000-0000"
                     value={formData.telefone}
                     onChange={handleChange}
-                    placeholder="(00) 00000-0000"
+                  />
+                </div>
+
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label className={styles.label}>E-mail</label>
+                  <input
+                    type="email"
+                    name="email"
+                    className={`${styles.input} ${fieldErrors.email ? styles.inputError : ''}`}
+                    placeholder="seu@email.com"
+                    value={formData.email}
+                    onChange={handleChange}
                   />
                 </div>
               </>
             )}
 
-            {/* STEP 4 - VITRINE */}
-            {currentStep === 4 && (
+            {/* PASSO 4 */}
+            {step === 4 && (
               <>
-                <div className={styles.inputGroup}>
-                  <label>Slogan (Descrição Curta) *</label>
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label className={styles.label}>Foto da Vitrine / Loja</label>
+                  <div className={styles.uploadContainer} style={{ borderColor: fieldErrors.fotoLoja ? 'var(--error)' : '' }}>
+                    <input
+                      type="file"
+                      id="file-loja"
+                      hidden
+                      accept="image/*"
+                      onChange={(e) => handleFile(e, 'fotoLoja')}
+                    />
+                    <label htmlFor="file-loja" style={{ width: '100%', height: '100%', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      {previews.fotoLoja ? (
+                        <>
+                          <img src={previews.fotoLoja} className={styles.uploadPreview} alt="Loja" />
+                          <div className={styles.previewOverlay}>
+                            <Camera size={24} /> <span style={{ marginLeft: 8 }}>Trocar</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Camera size={32} color="var(--primary)" />
+                          <span style={{ marginTop: 12, color: 'var(--text-muted)' }}>Foto da fachada ou produtos</span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                </div>
+
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label className={styles.label}>Slogan (Curto)</label>
                   <input
                     name="descCurta"
-                    className={styles.input}
+                    className={`${styles.input} ${fieldErrors.descCurta ? styles.inputError : ''}`}
+                    placeholder="Ex: O melhor preço da cidade"
                     value={formData.descCurta}
                     onChange={handleChange}
-                    placeholder="Ex: O melhor da região"
                     maxLength={50}
                   />
                 </div>
-                <div className={styles.inputGroup}>
-                  <label>Sobre a Loja (Descrição Longa) *</label>
+
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label className={styles.label}>Descrição Detalhada</label>
                   <textarea
                     name="descLonga"
-                    className={styles.input}
-                    rows={4}
+                    className={`${styles.textarea} ${fieldErrors.descLonga ? styles.inputError : ''}`}
+                    placeholder="Conte sobre sua loja, horários de atendimento..."
                     value={formData.descLonga}
                     onChange={handleChange}
-                    placeholder="Conte um pouco sobre sua história e produtos..."
-                  ></textarea>
-                </div>
-                <div className={styles.inputGroup}>
-                  <label>Foto da Loja *</label>
-                  <input
-                    type="file"
-                    id="foto-upload"
-                    className={styles.hiddenInput}
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, "fotoLoja", setFotoLojaPreview)}
                   />
-                  <label htmlFor="foto-upload" className={styles.fileUploadLabel}>
-                    {fotoLojaPreview ? (
-                      <div style={{ textAlign: "center" }}>
-                        <img
-                          src={fotoLojaPreview}
-                          alt="Foto Loja"
-                          style={{ maxHeight: "150px", borderRadius: "8px", marginBottom: "10px" }}
-                        />
-                        <div style={{ fontSize: "0.8rem", color: "#64748b" }}>Clique para trocar</div>
-                      </div>
-                    ) : (
-                      <div className={styles.placeholderContent}>
-                        <Camera size={32} />
-                        <div>Clique para adicionar foto da loja</div>
-                      </div>
-                    )}
-                  </label>
                 </div>
               </>
             )}
-            <div style={{ height: "40px" }}></div>
+
           </div>
 
-          {/* FOOTER */}
           <div className={styles.actions}>
-            {currentStep > 1 ? (
-              <button
-                className={styles.btnPrev}
-                onClick={() => {
-                   setSubmitError(null);
-                   setCurrentStep((s) => s - 1);
-                }}
-                disabled={loadingSubmit}
-              >
+            {step > 1 ? (
+              <button className={styles.btnBack} onClick={() => setStep(s => s - 1)} disabled={isLoading}>
                 <ArrowLeft size={18} /> Voltar
               </button>
-            ) : (
-              <div></div>
-            )}
+            ) : <div />}
 
             <button
               className={styles.btnNext}
-              disabled={loadingSubmit}
-              onClick={() => currentStep === 4 ? handleSubmit() : handleNextStep()}
+              onClick={step === 4 ? handleSubmit : handleNext}
+              disabled={isLoading}
             >
-              {loadingSubmit ? (
+              {isLoading ? (
                 <>
-                  <Loader2 size={18} className="animate-spin" /> Processando...
+                  <Loader2 className={styles.spinner} size={18} /> Processando...
                 </>
-              ) : currentStep === 4 ? (
-                "Concluir e Pagar"
+              ) : step === 4 ? (
+                <>Concluir Cadastro <Check size={18} /></>
               ) : (
-                <>
-                  Próximo <ArrowRight size={18} />
-                </>
+                <>Próximo <ArrowRight size={18} /></>
               )}
             </button>
           </div>
+
         </main>
       </div>
     </div>
