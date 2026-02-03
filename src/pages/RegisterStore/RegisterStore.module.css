@@ -2,21 +2,32 @@
 
 /* === 1. VARIÁVEIS DE COR (Identidade Visual do Sócio) === */
 :root {
-  --primary: #10b981;       /* Verde Emerald */
-  --primary-dark: #059669;  /* Verde Escuro */
-  --primary-light: #d1fae5; /* Verde Claro */
-  --bg-app: #f3f4f6;        /* Fundo Cinza */
-  --bg-card: #ffffff;       /* Fundo Branco */
-  --text-main: #1f2937;     /* Texto Escuro */
-  --text-muted: #6b7280;    /* Texto Cinza */
-  --border-color: #e5e7eb;  /* Bordas */
-  --error: #ef4444;         /* Vermelho Erro */
-  --radius: 16px;           /* Arredondamento */
+  --primary: #10b981;
+  /* Verde Emerald */
+  --primary-dark: #059669;
+  /* Verde Escuro */
+  --primary-light: #d1fae5;
+  /* Verde Claro */
+  --bg-app: #f3f4f6;
+  /* Fundo Cinza */
+  --bg-card: #ffffff;
+  /* Fundo Branco */
+  --text-main: #1f2937;
+  /* Texto Escuro */
+  --text-muted: #6b7280;
+  /* Texto Cinza */
+  --border-color: #e5e7eb;
+  /* Bordas */
+  --error: #ef4444;
+  /* Vermelho Erro */
+  --radius: 16px;
+  /* Arredondamento */
 }
 
 /* === 2. RESET BÁSICO === */
 * {
-  box-sizing: border-box; /* Crucial para não estourar larguras */
+  box-sizing: border-box;
+  /* Crucial para não estourar larguras */
 }
 
 /* === 3. CONTAINER PRINCIPAL (FUNDO CINZA) === */
@@ -36,25 +47,29 @@
   display: flex;
   width: 100%;
   max-width: 1100px;
-  height: 85vh; /* Altura fixa no desktop (85% da tela) */
+  height: 85vh;
+  /* Altura fixa no desktop (85% da tela) */
   min-height: 600px;
   background: var(--bg-card);
   border-radius: 24px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  overflow: hidden; /* Garante que nada vaze as bordas arredondadas */
+  overflow: hidden;
+  /* Garante que nada vaze as bordas arredondadas */
   position: relative;
 }
 
 /* === 5. SIDEBAR (ESQUERDA - DESKTOP) === */
 .sidebar {
-  width: 340px; /* Largura fixa */
+  width: 340px;
+  /* Largura fixa */
   background: linear-gradient(160deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: white;
   padding: 40px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  flex-shrink: 0; /* Impede a sidebar de encolher */
+  flex-shrink: 0;
+  /* Impede a sidebar de encolher */
 }
 
 .brand {
@@ -107,28 +122,40 @@
   line-height: 1.3;
 }
 
-.stepTitle { font-size: 0.9rem; }
-.stepSubtitle { font-size: 0.75rem; opacity: 0.9; font-weight: normal; }
+.stepTitle {
+  font-size: 0.9rem;
+}
+
+.stepSubtitle {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  font-weight: normal;
+}
 
 /* === 6. ÁREA DE CONTEÚDO (DIREITA) === */
 .content {
-  flex: 1; /* Ocupa o resto do espaço */
+  flex: 1;
+  /* Ocupa o resto do espaço */
   display: flex;
   flex-direction: column;
-  height: 100%; /* Respeita a altura do pai (.card) */
-  overflow: hidden; /* Impede scroll duplo */
+  height: 100%;
+  /* Respeita a altura do pai (.card) */
+  overflow: hidden;
+  /* Impede scroll duplo */
   position: relative;
 }
 
 /* O Header Mobile fica escondido no Desktop */
-.headerMobile, .mobileProgress {
+.headerMobile,
+.mobileProgress {
   display: none;
 }
 
 /* Cabeçalho do Formulário */
 .formHeader {
   padding: 50px 50px 30px 50px;
-  flex-shrink: 0; /* Não deixa encolher ao rolar */
+  flex-shrink: 0;
+  /* Não deixa encolher ao rolar */
 }
 
 .formTitle {
@@ -158,15 +185,30 @@
 }
 
 /* Personalização da barra de rolagem */
-.formGrid::-webkit-scrollbar { width: 6px; }
-.formGrid::-webkit-scrollbar-track { background: transparent; }
-.formGrid::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 20px; }
+.formGrid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.formGrid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.formGrid::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 20px;
+}
 
 /* Classes utilitárias do Grid */
-.fullWidth { grid-column: span 2; }
+.fullWidth {
+  grid-column: span 2;
+}
 
 /* Estilo dos Inputs */
-.formGroup { display: flex; flex-direction: column; gap: 8px; }
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 .label {
   font-size: 0.85rem;
@@ -177,7 +219,8 @@
   letter-spacing: 0.5px;
 }
 
-.input, .textarea {
+.input,
+.textarea {
   width: 100%;
   padding: 14px 16px;
   border: 1px solid var(--border-color);
@@ -188,22 +231,32 @@
   transition: 0.2s;
 }
 
-.input:focus, .textarea:focus {
+.input:focus,
+.textarea:focus {
   outline: none;
   background: white;
   border-color: var(--primary);
   box-shadow: 0 0 0 4px var(--primary-light);
 }
 
-.textarea { resize: vertical; min-height: 100px; font-family: inherit; }
-.inputError { border-color: var(--error); background: #fef2f2; }
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.inputError {
+  border-color: var(--error);
+  background: #fef2f2;
+}
 
 /* Galeria de Fotos / Upload */
 /* UPLOAD AREA (ATUALIZADO) */
 .uploadContainer {
   position: relative;
   width: 100%;
-  max-width: 100%; /* Trava de segurança extra */
+  max-width: 100%;
+  /* Trava de segurança extra */
   /* MUDANÇA: Altura flexível (min 140px) em vez de fixa (180px) */
   min-height: 140px;
   height: auto;
@@ -216,8 +269,23 @@
   cursor: pointer;
   transition: all 0.2s;
   background-color: #f9fafb;
-  overflow: hidden; /* Garante que a imagem não vaze as bordas */
+  overflow: hidden;
+  /* Garante que a imagem não vaze as bordas */
 }
+
+
+.uploadContainer img {
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+
+}
+
 
 .uploadContainer:hover {
   border-color: var(--primary);
@@ -241,21 +309,32 @@
   border: 1px solid var(--border-color);
 }
 
-.galleryItem img { width: 100%; height: 100%; object-fit: cover; }
+.galleryItem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
 .removeBtn {
   position: absolute;
-  top: 4px; right: 4px;
-  width: 24px; height: 24px;
-  background: rgba(0,0,0,0.6);
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.6);
   color: white;
-  border: none; border-radius: 50%;
+  border: none;
+  border-radius: 50%;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .addMoreBtn {
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   aspect-ratio: 1;
   border: 2px dashed var(--primary);
   color: var(--primary);
@@ -274,24 +353,47 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-shrink: 0; /* Não deixa sumir */
+  flex-shrink: 0;
+  /* Não deixa sumir */
 }
 
 .btnBack {
-  background: transparent; color: var(--text-muted); border: none; font-weight: 600;
-  display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 20px;
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 10px 20px;
 }
 
 .btnNext {
-  background: var(--primary); color: white; border: none; font-weight: 600;
-  padding: 14px 32px; border-radius: 50px;
-  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  background: var(--primary);
+  color: white;
+  border: none;
+  font-weight: 600;
+  padding: 14px 32px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
   transition: 0.2s;
 }
 
-.btnNext:hover { background: var(--primary-dark); transform: translateY(-2px); }
-.btnNext:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+.btnNext:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+.btnNext:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
 
 /* === 6. MOBILE TRANSFORMER (A Mágica Acontece Aqui) === */
 @media (max-width: 900px) {
@@ -300,7 +402,8 @@
   .container {
     padding: 0;
     align-items: flex-start;
-    height: 100dvh; /* Altura real do mobile */
+    height: 100dvh;
+    /* Altura real do mobile */
     overflow: hidden;
     background: white;
   }
@@ -317,23 +420,33 @@
 
   /* 3. SIDEBAR NO TOPO (Transformação Flex) */
   .sidebar {
-    display: flex; /* Garante que apareça */
+    display: flex;
+    /* Garante que apareça */
     width: 100%;
-    height: 70px; /* Altura fixa de cabeçalho */
+    height: 70px;
+    /* Altura fixa de cabeçalho */
     padding: 0 20px;
-    flex-direction: row; /* Itens lado a lado */
+    flex-direction: row;
+    /* Itens lado a lado */
     align-items: center;
-    justify-content: center; /* Centraliza verticalmente o conteúdo */
+    justify-content: center;
+    /* Centraliza verticalmente o conteúdo */
   }
 
-  .sidebar::before { display: none; } /* Remove bola decorativa */
-  
+  .sidebar::before {
+    display: none;
+  }
+
+  /* Remove bola decorativa */
+
   /* ESCONDE O RODAPÉ DA SIDEBAR (Texto de Copyright) */
-  .sidebar > div:last-child { display: none; }
+  .sidebar>div:last-child {
+    display: none;
+  }
 
   /* 4. ALINHAMENTO MARCA <-> ÍCONES */
   /* Pegamos a div que agrupa Brand e Steps e forçamos ela a ser horizontal */
-  .sidebar > div:first-child {
+  .sidebar>div:first-child {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -341,7 +454,9 @@
     width: 100%;
   }
 
-  .brand { font-size: 1.2rem; }
+  .brand {
+    font-size: 1.2rem;
+  }
 
   /* Ajuste dos Passos (Steps) para ficarem em linha */
   .stepsContainer {
@@ -350,30 +465,55 @@
     gap: 12px;
   }
 
-  .stepItem { gap: 0; opacity: 0.5; margin: 0; }
-  .stepActive { opacity: 1; transform: none; }
+  .stepItem {
+    gap: 0;
+    opacity: 0.5;
+    margin: 0;
+  }
+
+  .stepActive {
+    opacity: 1;
+    transform: none;
+  }
 
   /* Esconde os textos dos passos, deixa só o ícone */
-  .stepInfo { display: none; }
-  
-  .stepIcon {
-    width: 28px; height: 28px; font-size: 0.8rem;
-    background: rgba(255,255,255,0.25);
+  .stepInfo {
+    display: none;
   }
-  .stepActive .stepIcon { background: white; color: var(--primary); }
+
+  .stepIcon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .stepActive .stepIcon {
+    background: white;
+    color: var(--primary);
+  }
 
   /* Esconde os cabeçalhos mobile antigos que davam problema */
-  .headerMobile, .mobileProgress { display: none !important; }
+  .headerMobile,
+  .mobileProgress {
+    display: none !important;
+  }
 
   /* 5. CONTEÚDO E SCROLL */
   .content {
     width: 100%;
-    flex: 1; /* Ocupa todo o espaço restante */
+    flex: 1;
+    /* Ocupa todo o espaço restante */
     padding: 0;
   }
 
-  .formHeader { padding: 20px 24px 10px 24px; }
-  .formTitle { font-size: 1.5rem; }
+  .formHeader {
+    padding: 20px 24px 10px 24px;
+  }
+
+  .formTitle {
+    font-size: 1.5rem;
+  }
 
   /* Grid vira coluna única e ganha scroll */
   .formGrid {
@@ -383,15 +523,25 @@
     overflow-y: auto;
   }
 
-  .fullWidth { grid-column: span 1; }
+  .fullWidth {
+    grid-column: span 1;
+  }
 
   /* 6. AÇÕES FIXAS NO RODAPÉ */
   .actions {
     padding: 16px 24px;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
     z-index: 50;
   }
 
-  .btnNext { width: auto; padding: 12px 24px; font-size: 0.95rem; }
-  .btnBack { padding: 10px; font-size: 0.9rem; }
+  .btnNext {
+    width: auto;
+    padding: 12px 24px;
+    font-size: 0.95rem;
+  }
+
+  .btnBack {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
 }
