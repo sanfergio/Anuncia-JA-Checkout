@@ -17,7 +17,7 @@ import {
 import { PatternFormat } from "react-number-format";
 
 // --- CONFIGURAÇÕES ORIGINAIS DO SÓCIO ---
-const API_ENDPOINT = "https://www.newandrews.com.br/checkout-asaas/index.php";
+const API_ENDPOINT = "https://images.newandrews.com.br/checkout-asaas/index.php";
 const IMGBB_API_KEY = "570dba9241a1e1c9300130c89fa05036";
 const IMGBB_UPLOAD_URL = "https://api.imgbb.com/1/upload";
 
